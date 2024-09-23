@@ -1,262 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leaflet Color Markers</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: black;
-    }
-
-    #map {
-      height: 100vh;
-      width: 100vw;
-      border: none;
-    }
-
-    .leaflet-top.leaflet-right {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .color-btn {
-      border: 2px solid black;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      margin: 5px;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .blue { background-color: blue; }
-    .yellow { background-color: yellow; }
-    .green { background-color: green; }
-    .red { background-color: red; }
-
-    .counter {
-      position: absolute;
-      z-index: 1000;
-      top: 10px;
-      left: 10px;
-      background: rgba(255, 255, 255, 0.8);
-      padding: 10px;
-      border-radius: 8px;
-      font-family: Arial, sans-serif;
-    }
-
-    .delete-btn {
-      background-color: red;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-
-    /* Estilos para o botão de tela cheia */
-    #fullscreen-btn {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      z-index: 2000;
-      padding: 10px 20px;
-      background-color: black;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-
-<div id="map"></div>
-
-<!-- Contador no canto superior esquerdo -->
-<div id="counter" class="counter">
-  <div>Azul: <span id="blueCount">0</span></div>
-  <div>Amarelo: <span id="yellowCount">0</span></div>
-  <div>Verde: <span id="greenCount">0</span></div>
-  <div>Vermelho: <span id="redCount">0</span></div>
-</div>
-
-<!-- Botão de Tela Cheia -->
-<button id="fullscreen-btn">Tela Cheia</button>
-
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script>
-  // Inicializa o mapa
-  const map = L.map('map').setView([-15.7942, -47.8822], 12); // Posição inicial em Brasília
-
-  // Adiciona camada do mapa (tiles)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  // Cria os contadores para cada cor
-  let markerCount = {
-    blue: 0,
-    yellow: 0,
-    green: 0,
-    red: 0
-  };
-
-  // Variável para armazenar o marcador da localização atual
-  let currentLocationMarker;
-
-  // Função para atualizar a contagem de marcadores
-  function updateCounter() {
-    document.getElementById('blueCount').innerText = markerCount.blue;
-    document.getElementById('yellowCount').innerText = markerCount.yellow;
-    document.getElementById('greenCount').innerText = markerCount.green;
-    document.getElementById('redCount').innerText = markerCount.red;
-  }
-
-  // Função para adicionar marcador
-  function addMarker(color) {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(position => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        // Adiciona um círculo de fundo com baixa opacidade
-        L.circleMarker([lat, lng], {
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.3,
-          radius: 12
-        }).addTo(map);
-
-        // Adiciona o marcador da cor selecionada no mapa
-        const marker = L.circleMarker([lat, lng], {
-          color: color,
-          radius: 8
-        }).addTo(map);
-
-        // Armazena a cor do marcador dentro do próprio objeto
-        marker.markerColor = color;
-
-        // Vincula um popup ao marcador com um botão de excluir
-        marker.bindPopup(`
-          <div>
-            <p>Marcador de cor ${color}</p>
-            <button class="delete-btn" onclick="deleteMarker(${marker._leaflet_id})">Excluir</button>
-          </div>
-        `).openPopup();
-
-        // Incrementa o contador da cor
-        markerCount[color]++;
-        updateCounter();
-      });
-    } else {
-      alert("Geolocalização não é suportada por este navegador.");
-    }
-  }
-
-  // Função para criar botões de cor
-  function createColorButton(color, className) {
-    const btn = document.createElement('div');
-    btn.classList.add('color-btn', className);
-    btn.onclick = () => addMarker(color);
-    return btn;
-  }
-
-  // Adiciona os botões ao mapa
-  const blueButton = createColorButton('blue', 'blue');
-  const yellowButton = createColorButton('yellow', 'yellow');
-  const greenButton = createColorButton('green', 'green');
-  const redButton = createColorButton('red', 'red');
-
-  // Criação do controle personalizado
-  const customControl = L.Control.extend({
-    options: {
-      position: 'topright'
-    },
-    onAdd: function () {
-      const container = L.DomUtil.create('div', 'leaflet-bar');
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      
-      // Adiciona os botões ao container
-      container.appendChild(blueButton);
-      container.appendChild(yellowButton);
-      container.appendChild(greenButton);
-      container.appendChild(redButton);
-
-      return container;
-    }
-  });
-
-  // Adiciona o controle ao mapa
-  map.addControl(new customControl());
-
-  // Função para excluir marcador e atualizar o contador
-  function deleteMarker(markerId) {
-    const marker = map._layers[markerId];
-    if (marker) {
-      markerCount[marker.markerColor]--;
-      updateCounter();
-      map.removeLayer(marker);
-    }
-  }
-
-  // Função para adicionar e atualizar o marcador da localização atual
-  function updateCurrentLocationMarker() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(position => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        // Se o marcador da localização atual não existe, cria um
-        if (!currentLocationMarker) {
-          currentLocationMarker = L.circleMarker([lat, lng], {
-            color: 'white',
-            fillColor: 'black',
-            fillOpacity: 1,
-            radius: 10
-          }).addTo(map).bindPopup('Você está aqui!').openPopup();
-        } else {
-          // Atualiza a posição do marcador existente
-          currentLocationMarker.setLatLng([lat, lng]);
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaflet Color Markers</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
         }
 
-        // Centraliza o mapa na posição atual
-        map.setView([lat, lng]);
-      });
-    } else {
-      alert("Geolocalização não é suportada por este navegador.");
-    }
-  }
+        #map {
+            height: 100vh;
+            width: 100vw;
+            border: none;
+        }
 
-  // Atualiza a localização a cada 1 segundo
-  setInterval(updateCurrentLocationMarker, 1000);
+        .leaflet-top.leaflet-right {
+            display: flex;
+            flex-direction: column;
+        }
 
-  // Adiciona o marcador ao carregar a página
-  updateCurrentLocationMarker();
+        .color-btn {
+            border: 2px solid black;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-  // Função para entrar em tela cheia
-  function enterFullScreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen();
-    } else if (elem.mozRequestFullScreen) {
-      elem.mozRequestFullScreen();
-    } else if (elem.webkitRequestFullscreen) {
-      elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-      elem.msRequestFullscreen();
-    }
-  }
+        .blue { background-color: blue; }
+        .yellow { background-color: yellow; }
+        .green { background-color: green; }
+        .red { background-color: red; }
 
-  // Evento do botão de tela cheia
-  document.getElementById('fullscreen-btn').onclick = enterFullScreen;
-</script>
+        .counter {
+            position: absolute;
+            z-index: 1000;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+        }
+
+        .delete-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #fullscreen-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 2000;
+            padding: 10px 20px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div id="counter" class="counter">
+        <div>Azul: <span id="blueCount">0</span></div>
+        <div>Amarelo: <span id="yellowCount">0</span></div>
+        <div>Verde: <span id="greenCount">0</span></div>
+        <div>Vermelho: <span id="redCount">0</span></div>
+    </div>
+
+    <button id="fullscreen-btn">Tela Cheia</button>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        const map = L.map("map").setView([-15.7942, -47.8822], 12);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
+
+        let markerCount = { blue: 0, yellow: 0, green: 0, red: 0 };
+        let currentLocationMarker;
+        let addingMarker = false;
+
+        function updateCounter() {
+            document.getElementById("blueCount").innerText = markerCount.blue;
+            document.getElementById("yellowCount").innerText = markerCount.yellow;
+            document.getElementById("greenCount").innerText = markerCount.green;
+            document.getElementById("redCount").innerText = markerCount.red;
+        }
+
+        function addMarker(color, lat, lng) {
+            if (addingMarker) return;
+
+            addingMarker = true;
+            const marker = L.circleMarker([lat, lng], {
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.3,
+                radius: 12,
+            }).addTo(map);
+
+            fetch("https://mapa-clima-backend.vercel.app/markers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ latitude: lat, longitude: lng, color: color }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                marker.bindPopup(`
+                    <div>
+                        <p>Marcador de cor ${color}</p>
+                        <button class="delete-btn" onclick="deleteMarker('${data._id}', '${color}')">Excluir</button>
+                    </div>
+                `).openPopup();
+
+                markerCount[color]++;
+                updateCounter();
+                marker._id = data._id; // Armazenar o ID do banco de dados no marcador
+
+            })
+            .finally(() => {
+                addingMarker = false;
+            });
+        }
+
+        function createColorButton(color, className) {
+            const btn = document.createElement("div");
+            btn.classList.add("color-btn", className);
+            btn.onclick = () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        addMarker(color, lat, lng);
+                    });
+                } else {
+                    alert("Geolocalização não é suportada por este navegador.");
+                }
+            };
+            return btn;
+        }
+
+        const blueButton = createColorButton("blue", "blue");
+        const yellowButton = createColorButton("yellow", "yellow");
+        const greenButton = createColorButton("green", "green");
+        const redButton = createColorButton("red", "red");
+
+        const customControl = L.Control.extend({
+            options: { position: "topright" },
+            onAdd: function () {
+                const container = L.DomUtil.create("div", "leaflet-bar");
+                container.style.display = "flex";
+                container.style.flexDirection = "column";
+
+                container.appendChild(blueButton);
+                container.appendChild(yellowButton);
+                container.appendChild(greenButton);
+                container.appendChild(redButton);
+
+                return container;
+            },
+        });
+
+        map.addControl(new customControl());
+
+        function deleteMarker(markerId, color) {
+            const marker = Object.values(map._layers).find(m => m._id === markerId);
+            if (marker) {
+                markerCount[color]--;
+                updateCounter();
+                map.removeLayer(marker);
+
+                fetch(`https://mapa-clima-backend.vercel.app/markers/${markerId}`, {
+                    method: "DELETE",
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Erro ao deletar marcador");
+                    }
+                })
+                .catch((error) => console.error("Erro:", error));
+            } else {
+                console.error("Marcador não encontrado:", markerId);
+            }
+        }
+
+        async function loadMarkers() {
+            const response = await fetch("https://mapa-clima-backend.vercel.app/markers");
+            const markers = await response.json();
+            markers.forEach((marker) => {
+                addMarker(marker.color, marker.latitude, marker.longitude);
+            });
+        }
+
+        loadMarkers();
+
+        function updateCurrentLocationMarker() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    if (!currentLocationMarker) {
+                        currentLocationMarker = L.circleMarker([lat, lng], {
+                            color: "white",
+                            fillColor: "black",
+                            fillOpacity: 1,
+                            radius: 10,
+                        })
+                        .addTo(map)
+                        .bindPopup("Você está aqui!")
+                        .openPopup();
+                    } else {
+                        currentLocationMarker.setLatLng([lat, lng]);
+                    }
+
+                    map.setView([lat, lng]);
+                });
+            } else {
+                alert("Geolocalização não é suportada por este navegador.");
+            }
+        }
+
+        setInterval(updateCurrentLocationMarker, 1000);
+        updateCurrentLocationMarker();
+
+        function enterFullScreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        document.getElementById("fullscreen-btn").onclick = enterFullScreen;
+    </script>
 </body>
 </html>
