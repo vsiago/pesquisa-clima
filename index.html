@@ -7,22 +7,22 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <style>
     body {
-      margin: 0; /* Remove margens do corpo */
-      padding: 0; /* Remove padding do corpo */
-      background: black; /* Cor de fundo do corpo */
+      margin: 0;
+      padding: 0;
+      background: black;
     }
 
     #map {
       height: 100vh;
       width: 100vw;
-      border: none; /* Remove bordas do contêiner do mapa */
+      border: none;
     }
-    
+
     .leaflet-top.leaflet-right {
       display: flex;
       flex-direction: column;
     }
-    
+
     .color-btn {
       border: 2px solid black;
       border-radius: 50%;
@@ -34,12 +34,12 @@
       justify-content: center;
       align-items: center;
     }
-    
+
     .blue { background-color: blue; }
     .yellow { background-color: yellow; }
     .green { background-color: green; }
     .red { background-color: red; }
-    
+
     .counter {
       position: absolute;
       z-index: 1000;
@@ -50,7 +50,7 @@
       border-radius: 8px;
       font-family: Arial, sans-serif;
     }
-    
+
     .delete-btn {
       background-color: red;
       color: white;
@@ -199,23 +199,21 @@
     }
   }
 
-  // Adiciona um marcador com boneco na localização atual
+  // Adiciona um marcador com ponto preto na localização atual
   function addCurrentLocationMarker() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(position => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        // Adiciona o marcador de boneco
-        const userIcon = L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png',
-          iconSize: [40, 40], // Tamanho do ícone
-          iconAnchor: [20, 40], // Âncora do ícone
-          popupAnchor: [0, -40] // Posição do popup em relação ao ícone
-        });
-
-        const marker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-        marker.bindPopup('Você está aqui!').openPopup();
+        // Adiciona um ponto preto na posição atual
+        L.circleMarker([lat, lng], {
+          color: 'white',
+          fillColor: '#333',
+          
+          fillOpacity: 1,
+          radius: 10 // Tamanho do ponto
+        }).addTo(map).bindPopup('Você está aqui!').openPopup();
 
         // Centraliza o mapa na posição atual
         map.setView([lat, lng], 12);
