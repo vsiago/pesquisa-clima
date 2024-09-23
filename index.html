@@ -88,7 +88,7 @@
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        const map = L.map("map").setView([-15.7942, -47.8822], 12);
+        const map = L.map("map").setView([-15.7942, -47.8822], 15);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "© OpenStreetMap contributors",
@@ -259,7 +259,7 @@ async function loadMarkers() {
                 .openPopup();
                 
                 // Centraliza o mapa apenas na primeira vez que o marcador é criado
-                map.setView([lat, lng], 12); 
+                map.setView([lat, lng], 15); 
             } else {
                 // Atualiza a posição do marcador sem recentralizar o mapa constantemente
                 currentLocationMarker.setLatLng([lat, lng]);
@@ -277,7 +277,7 @@ async function loadMarkers() {
 }
 
 // Atualiza a localização do usuário a cada segundo
-setInterval(updateCurrentLocationMarker, 1000);
+setInterval(updateCurrentLocationMarker, 500);
 
 // Chama uma vez para inicializar o marcador
 updateCurrentLocationMarker();
