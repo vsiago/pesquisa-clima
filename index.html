@@ -228,15 +228,15 @@
         }
 
         // Centraliza o mapa na posição atual
-        map.setView([lat, lng], 12);
+        map.setView([lat, lng]);
       });
     } else {
       alert("Geolocalização não é suportada por este navegador.");
     }
   }
 
-  // Atualiza a localização a cada 5 segundos
-  setInterval(updateCurrentLocationMarker, 5000);
+  // Atualiza a localização a cada 1 segundo
+  setInterval(updateCurrentLocationMarker, 1000);
 
   // Adiciona o marcador ao carregar a página
   updateCurrentLocationMarker();
