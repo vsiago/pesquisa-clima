@@ -6,14 +6,23 @@
   <title>Leaflet Color Markers</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <style>
+    body {
+      margin: 0; /* Remove margens do corpo */
+      padding: 0; /* Remove padding do corpo */
+      background: black; /* Cor de fundo do corpo */
+    }
+
     #map {
       height: 100vh;
       width: 100vw;
+      border: none; /* Remove bordas do contêiner do mapa */
     }
+    
     .leaflet-top.leaflet-right {
       display: flex;
       flex-direction: column;
     }
+    
     .color-btn {
       border: 2px solid black;
       border-radius: 50%;
@@ -25,10 +34,12 @@
       justify-content: center;
       align-items: center;
     }
+    
     .blue { background-color: blue; }
     .yellow { background-color: yellow; }
     .green { background-color: green; }
     .red { background-color: red; }
+    
     .counter {
       position: absolute;
       z-index: 1000;
@@ -39,6 +50,7 @@
       border-radius: 8px;
       font-family: Arial, sans-serif;
     }
+    
     .delete-btn {
       background-color: red;
       color: white;
@@ -47,6 +59,7 @@
       cursor: pointer;
       border-radius: 5px;
     }
+
     /* Estilos para o botão de tela cheia */
     #fullscreen-btn {
       position: absolute;
@@ -229,9 +242,8 @@
     }
   }
 
-  // Adiciona evento de clique para o botão de tela cheia
-  document.getElementById('fullscreen-btn').addEventListener('click', enterFullScreen);
+  // Evento do botão de tela cheia
+  document.getElementById('fullscreen-btn').onclick = enterFullScreen;
 </script>
-
 </body>
 </html>
