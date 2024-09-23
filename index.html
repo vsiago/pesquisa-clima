@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaflet Color Markers</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 100vh;
+      width: 100vw;
+    }
+    .leaflet-top.leaflet-right {
+      display: flex;
+      flex-direction: column;
+    }
+    .color-btn {
+      border: 2px solid black;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin: 5px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .blue { background-color: blue; }
+    .yellow { background-color: yellow; }
+    .green { background-color: green; }
+    .red { background-color: red; }
+    .counter {
+      position: absolute;
+      z-index: 1000;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Contador no canto superior esquerdo -->
+<div id="counter" class="counter">
+  <div>Azul: <span id="blueCount">0</span></div>
+  <div>Amarelo: <span id="yellowCount">0</span></div>
+  <div>Verde: <span id="greenCount">0</span></div>
+  <div>Vermelho: <span id="redCount">0</span></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+  // Inicializa o mapa
+  const map = L.map('map').setView([-15.7942, -47.8822], 12); // Posição inicial em Brasília
+
+  // Adiciona camada do mapa (tiles)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Cria os contadores para cada cor
+  let markerCount = {
+    blue: 0,
+    yellow: 0,
+    green: 0,
+    red: 0
+  };
+
+  // Função para atualizar a contagem de marcadores
+  function updateCounter() {
+    document.getElementById('blueCount').innerText = markerCount.blue;
+    document.getElementById('yellowCount').innerText = markerCount.yellow;
+    document.getElementById('greenCount').innerText = markerCount.green;
+    document.getElementById('redCount').innerText = markerCount.red;
+  }
+
+  // Função para adicionar marcador
+  function addMarker(color) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Adiciona o marcador da cor selecionada no mapa
+        L.circleMarker([lat, lng], {
+          color: color,
+          radius: 8
+        }).addTo(map);
+
+        // Incrementa o contador da cor
+        markerCount[color]++;
+        updateCounter();
+      });
+    } else {
+      alert("Geolocalização não é suportada por este navegador.");
+    }
+  }
+
+  // Função para criar botões de cor
+  function createColorButton(color, className) {
+    const btn = document.createElement('div');
+    btn.classList.add('color-btn', className);
+    btn.onclick = () => addMarker(color);
+    return btn;
+  }
+
+  // Adiciona os botões ao mapa
+  const blueButton = createColorButton('blue', 'blue');
+  const yellowButton = createColorButton('yellow', 'yellow');
+  const greenButton = createColorButton('green', 'green');
+  const redButton = createColorButton('red', 'red');
+
+  // Criação do controle personalizado
+  const customControl = L.Control.extend({
+    options: {
+      position: 'topright' // Posição dos botões
+    },
+    onAdd: function () {
+      const container = L.DomUtil.create('div', 'leaflet-bar');
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      
+      // Adiciona os botões ao container
+      container.appendChild(blueButton);
+      container.appendChild(yellowButton);
+      container.appendChild(greenButton);
+      container.appendChild(redButton);
+
+      return container;
+    }
+  });
+
+  // Adiciona o controle ao mapa
+  map.addControl(new customControl());
+
+  // Adiciona um marcador com boneco na localização atual
+  function addCurrentLocationMarker() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Adiciona o marcador de boneco
+        const userIcon = L.icon({
+          iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png',
+          iconSize: [40, 40], // Tamanho do ícone
+          iconAnchor: [20, 40], // Âncora do ícone
+          popupAnchor: [0, -40] // Posição do popup em relação ao ícone
+        });
+
+        const marker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+        marker.bindPopup('Você está aqui!').openPopup();
+
+        // Centraliza o mapa na posição atual
+        map.setView([lat, lng], 12);
+      });
+    } else {
+      alert("Geolocalização não é suportada por este navegador.");
+    }
+  }
+
+  // Adiciona o marcador ao carregar a página
+  addCurrentLocationMarker();
+</script>
+
+</body>
+</html>
