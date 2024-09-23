@@ -39,6 +39,27 @@
       border-radius: 8px;
       font-family: Arial, sans-serif;
     }
+    .delete-btn {
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    /* Estilos para o botão de tela cheia */
+    #fullscreen-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 2000;
+      padding: 10px 20px;
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -52,6 +73,9 @@
   <div>Verde: <span id="greenCount">0</span></div>
   <div>Vermelho: <span id="redCount">0</span></div>
 </div>
+
+<!-- Botão de Tela Cheia -->
+<button id="fullscreen-btn">Tela Cheia</button>
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
@@ -87,10 +111,21 @@
         const lng = position.coords.longitude;
 
         // Adiciona o marcador da cor selecionada no mapa
-        L.circleMarker([lat, lng], {
+        const marker = L.circleMarker([lat, lng], {
           color: color,
           radius: 8
         }).addTo(map);
+
+        // Armazena a cor do marcador dentro do próprio objeto
+        marker.markerColor = color;
+
+        // Vincula um popup ao marcador com um botão de excluir
+        marker.bindPopup(`
+          <div>
+            <p>Marcador de cor ${color}</p>
+            <button class="delete-btn" onclick="deleteMarker(${marker._leaflet_id})">Excluir</button>
+          </div>
+        `).openPopup();
 
         // Incrementa o contador da cor
         markerCount[color]++;
@@ -138,6 +173,19 @@
   // Adiciona o controle ao mapa
   map.addControl(new customControl());
 
+  // Função para excluir marcador e atualizar o contador
+  function deleteMarker(markerId) {
+    const marker = map._layers[markerId];
+    if (marker) {
+      // Decrementa o contador da cor do marcador que será excluído
+      markerCount[marker.markerColor]--;
+      updateCounter();
+
+      // Remove o marcador do mapa
+      map.removeLayer(marker);
+    }
+  }
+
   // Adiciona um marcador com boneco na localização atual
   function addCurrentLocationMarker() {
     if (navigator.geolocation) {
@@ -166,6 +214,23 @@
 
   // Adiciona o marcador ao carregar a página
   addCurrentLocationMarker();
+
+  // Função para entrar em tela cheia
+  function enterFullScreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) { // Para Firefox
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) { // Para Chrome, Safari e Opera
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { // Para IE/Edge
+      elem.msRequestFullscreen();
+    }
+  }
+
+  // Adiciona evento de clique para o botão de tela cheia
+  document.getElementById('fullscreen-btn').addEventListener('click', enterFullScreen);
 </script>
 
 </body>
