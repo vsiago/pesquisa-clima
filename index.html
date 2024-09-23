@@ -201,13 +201,42 @@
             }
         }
 
-        async function loadMarkers() {
-            const response = await fetch("https://mapa-clima-backend.vercel.app/markers");
-            const markers = await response.json();
-            markers.forEach((marker) => {
-                addMarker(marker.color, marker.latitude, marker.longitude);
-            });
+async function loadMarkers() {
+    try {
+        const response = await fetch("https://mapa-clima-backend.vercel.app/markers");
+        if (!response.ok) {
+            throw new Error("Erro ao carregar marcadores");
         }
+        const markers = await response.json();
+
+        markers.forEach((marker) => {
+            // A função addMarker não será chamada aqui diretamente
+            // pois ela já contém lógica de adição de novos marcadores.
+            const leafletMarker = L.circleMarker([marker.latitude, marker.longitude], {
+                color: marker.color,
+                fillColor: marker.color,
+                fillOpacity: 0.3,
+                radius: 12,
+            }).addTo(map);
+
+            leafletMarker.bindPopup(`
+                <div>
+                    <p>Marcador de cor ${marker.color}</p>
+                    <button class="delete-btn" onclick="deleteMarker('${marker._id}', '${marker.color}')">Excluir</button>
+                </div>
+            `);
+
+            // Incrementa o contador baseado na cor
+            markerCount[marker.color]++;
+            updateCounter();
+
+            leafletMarker._id = marker._id; // Adiciona o ID ao marcador no mapa
+        });
+    } catch (error) {
+        console.error("Erro ao carregar marcadores:", error);
+    }
+}
+
 
         loadMarkers();
 
