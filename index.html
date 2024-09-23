@@ -241,34 +241,46 @@ async function loadMarkers() {
         loadMarkers();
 
         function updateCurrentLocationMarker() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
 
-                    if (!currentLocationMarker) {
-                        currentLocationMarker = L.circleMarker([lat, lng], {
-                            color: "white",
-                            fillColor: "black",
-                            fillOpacity: 1,
-                            radius: 10,
-                        })
-                        .addTo(map)
-                        .bindPopup("Você está aqui!")
-                        .openPopup();
-                    } else {
-                        currentLocationMarker.setLatLng([lat, lng]);
-                    }
-
-                    map.setView([lat, lng]);
-                });
+            if (!currentLocationMarker) {
+                // Cria o marcador para a posição atual do usuário
+                currentLocationMarker = L.circleMarker([lat, lng], {
+                    color: "white",
+                    fillColor: "black",
+                    fillOpacity: 1,
+                    radius: 10,
+                })
+                .addTo(map)
+                .bindPopup("Você está aqui!")
+                .openPopup();
+                
+                // Centraliza o mapa apenas na primeira vez que o marcador é criado
+                map.setView([lat, lng], 12); 
             } else {
-                alert("Geolocalização não é suportada por este navegador.");
+                // Atualiza a posição do marcador sem recentralizar o mapa constantemente
+                currentLocationMarker.setLatLng([lat, lng]);
             }
-        }
+        }, (error) => {
+            console.error("Erro ao obter a localização: ", error);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 1000,
+            timeout: 10000
+        });
+    } else {
+        alert("Geolocalização não é suportada por este navegador.");
+    }
+}
 
-        setInterval(updateCurrentLocationMarker, 1000);
-        updateCurrentLocationMarker();
+// Atualiza a localização do usuário a cada segundo
+setInterval(updateCurrentLocationMarker, 1000);
+
+// Chama uma vez para inicializar o marcador
+updateCurrentLocationMarker();
 
         function enterFullScreen() {
             const elem = document.documentElement;
